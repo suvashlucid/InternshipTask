@@ -1,0 +1,29 @@
+.firstdiv {
+  display: flex;
+  justify-content: space-between; /* Adjusted */
+  align-items: center; /* Center vertically */
+  padding: 3px 5px; /* Added padding */
+  background-color: black;
+  position: sticky;
+  top: 0; /* Stick to the top of the viewport */
+  z-index: 999; /* Ensure it's above other content */
+  color: white;
+  height: 53px;
+}
+
+.firstdivv {
+  display: flex;
+
+  align-items: center; /* Center vertically */
+}
+
+.seconddivv {
+  display: flex;
+  align-items: center; /* Center vertically */
+}
+
+.logoname {
+  margin-right: 20px; /* Adjusted */
+  color: #8ab9f1;
+  text-decoration: double;
+}

@@ -1,0 +1,14 @@
+.gridsbox {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  grid-template-rows: 90px;
+}
+.service1 {
+  border-top: 1px solid;
+  color: black;
+  font-size: 14px;
+  font-weight: none;
+  background-color: #8ab9f1;
+
+  text-align: center;
+}

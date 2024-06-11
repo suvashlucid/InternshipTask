@@ -1,0 +1,19 @@
+.lowerdivmain {
+  background-color: #8ab9f1;
+  height: 40px;
+  width: auto;
+  position: relative;
+}
+.h1h1 {
+  position: absolute;
+  margin-left: 420px;
+  margin-top: -300px;
+  height: 300px;
+}
+.p1p1 {
+  position: absolute;
+  margin-left: 420px;
+  margin-top: -90px;
+  height: 200px;
+  width: fit-content;
+}

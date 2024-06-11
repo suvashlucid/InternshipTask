@@ -1,0 +1,23 @@
+.landing1 {
+  margin-top: px;
+}
+
+#landing2 {
+  margin-top: 300px;
+
+  color: blue;
+  font-weight: bolder;
+  width: 444px;
+  margin-left: 115px;
+  font-size: 22px;
+}
+.section {
+  background-color: white;
+}
+.n {
+  height: 500px;
+  width: auto;
+  margin-top: -300px;
+  position: relative;
+  background-color: #8ab9f1;
+}
