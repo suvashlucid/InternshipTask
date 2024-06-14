@@ -82,6 +82,12 @@ const Admindashboard = () => {
         marginTop: "60px",
         overflowX: "auto",
         overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        marginLeft: "400px",
+        alignItems: "center",
+        position: "static",
       }}
     >
       <h2 className="text-3xl text-blue-500">Line Chart</h2>

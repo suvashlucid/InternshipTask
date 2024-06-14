@@ -6,10 +6,7 @@ interface VisibilityProps {
   toggleVisibility: () => void;
 }
 
-const Visibility: React.FC<VisibilityProps> = ({
-  isVisible,
-  toggleVisibility,
-}) => {
+const Visibility: React.FC<VisibilityProps> = ({ toggleVisibility }) => {
   return (
     <button
       type="button"

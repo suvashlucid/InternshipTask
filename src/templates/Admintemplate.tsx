@@ -9,9 +9,9 @@ function Admintemplate() {
       <div
         style={{
           marginLeft: "240px",
-          position: "static",
+          position: "absolute",
           marginTop: "0px",
-          padding: "28px",
+          padding: "20px",
         }}
       >
         <Outlet />

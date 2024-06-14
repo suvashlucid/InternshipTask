@@ -1,13 +1,13 @@
 import { faEye } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import encryptDecrypt from "../../functions/encryptDecrypt";
 import axios from "../../service/Instance";
-const eye = <FontAwesomeIcon icon={faEye} />;
-
-import { useState } from "react";
 import Label from "../../utils/themes/components/Label";
+import Googlelogin from "../adminpanel/Googlelogin";
+const eye = <FontAwesomeIcon icon={faEye} />;
 
 interface logintype {
   email: string | null;
@@ -33,6 +33,8 @@ const Login = () => {
       });
       console.log(response);
       console.log(data);
+      localStorage.setItem("em", data.email as string);
+
       if (data.rememberme) {
         localStorage.setItem("email", data.email as string);
         localStorage.setItem("password", data.password as string);
@@ -103,6 +105,9 @@ const Login = () => {
           >
             Login
           </button>
+        </div>
+        <div>
+          <Googlelogin />
         </div>
       </form>
     </div>

@@ -4,15 +4,17 @@ import {
   Lock as LockIcon,
   Person as PersonIcon,
   Phone as PhoneIcon,
-} from "@mui/icons-material"; // Import icons from MUI
+} from "@mui/icons-material";
 import { Container } from "@mui/material";
 import React, { useState } from "react";
+
 import { Controller, useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as yup from "yup";
 import axiosInstance from "../../service/Instance";
-import Visibility from "../login/Visibility"; // Import the Visibility component correctly
+import Visibility from "../login/Visibility";
+import MediaComponent from "./Mediacomponent";
 
 const schema = yup.object().shape({
   email: yup
@@ -26,9 +28,11 @@ const schema = yup.object().shape({
     .required("Password is required"),
   firstName: yup.object().shape({
     en: yup.string().required("input first name"),
+    ne: yup.string().required("पहिलो नाम लेख्नुहोस्"),
   }),
   lastName: yup.object().shape({
     en: yup.string().required("input the last name"),
+    ne: yup.string().required("पहिलो नाम लेख्नुहोस्"),
   }),
   role: yup.string().required("Role is needed"),
   phoneNumber: yup.string().required("Phone number is needed"),
@@ -91,19 +95,26 @@ const Admincreate: React.FC = () => {
 
       console.log("Server response:", response.data);
       reset();
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Error");
+    } catch (error: any) {
+      if (error instanceof Error) {
+        console.log("Instance error");
+      } else {
+        console.log(error);
+        toast.error(error?.response?.data?.message);
+      }
     }
   };
 
   return (
     <Container
-      sx={{ marginTop: "90px", overflowX: "auto ", overflowY: "auto" }}
+      sx={{
+        marginTop: "40px",
+        overflow: "auto ",
+        marginLeft: "180px",
+      }}
     >
+      <ToastContainer />
       <div>
-        <ToastContainer />
-
         <form
           onSubmit={handleSubmit(onSubmitHandler)}
           className="w-96 mx-auto p-8 rounded-lg shadow-md"
@@ -121,7 +132,7 @@ const Admincreate: React.FC = () => {
             Welcome
           </span>
 
-          <div className="relative mt-4">
+          <div className="relative mt-4 ">
             <EmailIcon className="absolute left-2 top-1/2 transform -translate-y-1/2" />
             <input
               {...register("email")}
@@ -228,6 +239,9 @@ const Admincreate: React.FC = () => {
             {errors.phoneNumber && (
               <p className="text-red-500">{errors.phoneNumber.message}</p>
             )}
+          </div>
+          <div>
+            <MediaComponent />
           </div>
 
           <Controller

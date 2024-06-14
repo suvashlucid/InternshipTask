@@ -1,12 +1,14 @@
-import { faEye } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faKey } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Container, TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../../service/Instance";
+
 const eye = <FontAwesomeIcon icon={faEye} />;
+const keyIcon = <FontAwesomeIcon icon={faKey} />;
 
 interface FormInputs {
   oldPassword: string;
@@ -14,92 +16,100 @@ interface FormInputs {
 }
 
 const Changepassword: React.FC = () => {
-  const [passwordshown, setpasswordshown] = useState<boolean>(false);
+  const [passwordShown, setPasswordShown] = useState<boolean>(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormInputs>();
-  const togglepasswordvisibility = () => {
-    setpasswordshown(passwordshown ? false : true);
+  const togglePasswordVisibility = () => {
+    setPasswordShown(!passwordShown);
   };
 
   const onSubmit: SubmitHandler<FormInputs> = async (data) => {
     try {
       await axiosInstance.patch("/auth/update-password", data);
       toast.success("Successfully changed");
-    } catch (error) {
-      console.error("Error changing password:", error);
-      toast.warning("Error changing password");
+    } catch (error: any) {
+      if (error instanceof Error) {
+        console.log("Instance Error");
+      } else {
+        console.error("Error changing password:", error);
+        toast.error(error?.response.data.message);
+      }
     }
   };
 
   return (
-    <Container sx={{ marginTop: "160px", width: "550px", boxShadow: "24px" }}>
-      <form
-        className="bg-white shadow-xl mt-50   rounded px-8 pt-6 pb-8 mb-4 sm:mb-22"
-        onSubmit={handleSubmit(onSubmit)}
+    <form
+      className=" h-screen w-full bg-white  mt-64 ml-72 h-12px px-8 pb-8 mb-4     "
+      onSubmit={handleSubmit(onSubmit)}
+    >
+      <h1 className="text-center font-bold text-slate-600  underline decoration-2 decoration-black underline-offset-8 text-xl mb-6">
+        Change Password
+      </h1>
+      <ToastContainer />
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          {keyIcon}
+        </div>
+        <TextField
+          label="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Current Password"
+          type={passwordShown ? "text" : "password"}
+          placeholder={"Current Password"}
+          {...register("oldPassword", {
+            required: "Current Password is required",
+          })}
+          error={!!errors.oldPassword}
+          helperText={errors.oldPassword ? errors.oldPassword.message : ""}
+          fullWidth
+          margin="normal"
+          InputProps={{
+            style: { paddingLeft: "2.5rem" }, // Adjust padding to accommodate icon
+          }}
+        />
+        <div
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+          onClick={togglePasswordVisibility}
+        >
+          {eye}
+        </div>
+      </div>
+      <div className="relative mb-4">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          {keyIcon}
+        </div>
+        <TextField
+          label="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;New Password"
+          type={passwordShown ? "text" : "password"}
+          placeholder="New Password"
+          {...register("newPassword", {
+            required: "New Password is required",
+          })}
+          error={!!errors.newPassword}
+          helperText={errors.newPassword ? errors.newPassword.message : ""}
+          fullWidth
+          margin="normal"
+          InputProps={{
+            style: { paddingLeft: "2.5rem" }, // Adjust padding to accommodate icon
+          }}
+        />
+        <div
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+          onClick={togglePasswordVisibility}
+        >
+          {eye}
+        </div>
+      </div>
+      <Button
+        type="submit"
+        variant="contained"
+        style={{ color: "white", backgroundColor: "slategray" }}
+        className="w-1/4 h-8 mx-auto block"
       >
-        <h1
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontWeight: "bold",
-          }}
-        >
-          Change Password
-        </h1>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <TextField
-            label="Current Password"
-            type={passwordshown ? "text" : "password"}
-            {...register("oldPassword", {
-              required: "Current Password is required",
-            })}
-            error={!!errors.oldPassword}
-            helperText={errors.oldPassword ? errors.oldPassword.message : ""}
-            fullWidth
-            margin="normal"
-          />
-          <div style={{ marginLeft: "20px" }}>
-            <i onClick={togglepasswordvisibility}>{eye}</i>
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <TextField
-            label="New Password"
-            type={passwordshown ? "text" : "password"}
-            {...register("newPassword", {
-              required: "New Password is required",
-            })}
-            error={!!errors.newPassword}
-            helperText={errors.newPassword ? errors.newPassword.message : ""}
-            fullWidth
-            margin="normal"
-          />
-          <div style={{ marginLeft: "20px" }}>
-            <i onClick={togglepasswordvisibility}>{eye}</i>
-          </div>
-        </div>
-
-        <Button type="submit" variant="contained" color="primary">
-          Change Password
-        </Button>
-      </form>
-    </Container>
+        Change
+      </Button>
+    </form>
   );
 };
 

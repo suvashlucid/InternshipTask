@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { ToastContainer, toast } from "react-toastify";
+import encryptDecrypt from "../../functions/encryptDecrypt";
 import axios from "../../service/Instance";
 import Button from "../../utils/themes/components/Button";
 import Label from "../../utils/themes/components/Label";
 import Placeholderr from "../../utils/themes/components/Placeholderr";
-import Pagination from "./Pagination";
-
+import Search from "../../utils/themes/components/Search";
+import "./admincss/Adminlist.css";
 interface AdminListProps {}
 
 interface Response {
@@ -29,6 +30,17 @@ interface Response {
   };
 }
 
+// Custom debounce function
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
 const Adminlist: React.FC<AdminListProps> = () => {
   const { register, handleSubmit, setValue } = useForm();
   const [admins, setAdmins] = useState<Response[]>([]);
@@ -38,14 +50,20 @@ const Adminlist: React.FC<AdminListProps> = () => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [totalPages, setTotalPages] = useState<number>(3);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [rowsPerPage, setRowsPerPage] = useState<number>(10);
+  const [rowsPerPage] = useState<number>(10);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const fetchAdmins = async (page: number, perPage: number = 10) => {
+  const fetchAdmins = async (
+    page: number,
+    perPage: number = 10,
+    query: string = ""
+  ) => {
     try {
       const response = await axios.get(`/admin`, {
         params: {
           page,
           perpage: perPage,
+          search: query,
         },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("tokenstorage")}`,
@@ -59,8 +77,8 @@ const Adminlist: React.FC<AdminListProps> = () => {
   };
 
   useEffect(() => {
-    fetchAdmins(currentPage, rowsPerPage);
-  }, [currentPage, rowsPerPage]);
+    fetchAdmins(currentPage, rowsPerPage, searchQuery);
+  }, [currentPage, rowsPerPage, searchQuery]);
 
   const deleteAdmin = async (id: string) => {
     try {
@@ -69,10 +87,11 @@ const Adminlist: React.FC<AdminListProps> = () => {
           Authorization: `Bearer ${localStorage.getItem("tokenstorage")}`,
         },
       });
-      const updatedAdmins = admins.filter((admin) => admin.id !== id);
-      setAdmins(updatedAdmins);
+      setAdmins(admins.filter((admin) => admin.id !== id));
+      toast.success("Admin deleted successfully.");
     } catch (error) {
       console.error("Error deleting admin:", error);
+      toast.error("Error deleting admin.");
     }
   };
 
@@ -86,12 +105,13 @@ const Adminlist: React.FC<AdminListProps> = () => {
       const adminDetails = response.data.data;
       setSelectedAdminDetails(adminDetails);
       setIsViewModalOpen(true);
-      setIsEditMode(false); // Reset edit mode when viewing
+      setIsEditMode(false);
       Object.keys(adminDetails).forEach((key) => {
         setValue(key, adminDetails[key]);
       });
     } catch (err) {
       console.error("Error fetching admin details:", err);
+      toast.error("Error fetching admin details.");
     }
   };
 
@@ -104,7 +124,6 @@ const Adminlist: React.FC<AdminListProps> = () => {
       const {
         id,
         role,
-        allowedFeature,
         details: { firstName, lastName, phoneNumber },
       } = data;
       const updatedAdminData = {
@@ -122,9 +141,10 @@ const Adminlist: React.FC<AdminListProps> = () => {
       });
 
       closeModal();
-      toast.success("You have successfully updated the data. Please refresh.");
+      toast.success("Admin details updated successfully.");
     } catch (error) {
       console.error("Error editing admin:", error);
+      toast.error("Error editing admin.");
     }
   };
 
@@ -132,53 +152,79 @@ const Adminlist: React.FC<AdminListProps> = () => {
     setCurrentPage(page);
   };
 
-  const handleRowsPerPageChange = (perPage: number) => {
-    setRowsPerPage(perPage);
-  };
-
+  const handleSearchChange = useCallback(
+    debounce((value: string) => {
+      setSearchQuery(value);
+      setCurrentPage(1);
+    }, 300),
+    []
+  );
+  console.log(
+    encryptDecrypt.decrypt(localStorage.getItem("tokenstorage") as string)
+  );
   return (
-    <div style={{ width: "100%" }} className=" mt-10  px-5">
-      <ToastContainer style={{ maxWidth: "15" }} />
-      <div className="flex justify-between items-center mb-4">
-        <div></div>
+    <div className="w-full mt-20 px-5">
+      <div>
+        <Search onChange={(e) => handleSearchChange(e.target.value)} />
       </div>
 
-      <table className="w-full text-sm text-center">
-        <thead className="uppercase bg-slate-400">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: "bolder",
+            textDecoration: "underline",
+            marginLeft: "100px",
+            textUnderlineOffset: "9px",
+            textDecorationLine: "2px",
+            color: "slategray",
+          }}
+        >
+          Admin List
+        </h1>
+      </div>
+
+      <ToastContainer />
+      <div className="flex justify-between items-center mb-4"></div>
+
+      <table className="w-full text-sm text-center ml-10">
+        <thead className="bg-slate-400">
           <tr>
-            <th className="px-6 py-3">S.N</th>
-            <th className="px-6 py-3">Username</th>
-            <th className="px-6 py-3">First Name</th>
-            <th className="px-6 py-3">Last Name</th>
-            <th className="px-6 py-3">Email</th>
-            <th className="px-6 py-3">Role</th>
-            <th className="px-6 py-3">View</th>
-            <th className="px-6 py-3">Delete</th>
+            <th className="px-6 py-3 border">S.N</th>
+            <th className="px-6 py-3 border">Username</th>
+            <th className="px-6 py-3 border">First Name</th>
+            <th className="px-6 py-3 border">Last Name</th>
+            <th className="px-6 py-3 border">Email</th>
+            <th className="px-6 py-3 border">Role</th>
+            <th className="px-6 py-3 border">View</th>
+            <th className="px-6 py-3 border">Delete</th>
           </tr>
         </thead>
-
         <tbody>
           {admins.map((item, index) => (
-            <tr
-              key={index}
-              className=" odd:bg-slate-200  even:bg-black-500     "
-            >
-              <td className="px-6  py-8">{index + 1}</td>
-              <td className="px-6 py-3">{item.username}</td>
-              <td className="px-6 py-3">
+            <tr key={index} className="odd:bg-slate-200 even:bg-gray-100">
+              <td className="px-6 py-3 border">{index + 1}</td>
+              <td className="px-6 py-3 border">{item.username}</td>
+              <td className="px-6 py-3 border">
                 <Placeholderr value={item.details.firstName?.en} />
               </td>
-              <td className="px-6 py-3">
+              <td className="px-6 py-3 border">
                 <Placeholderr value={item.details.lastName?.en} />
               </td>
-              <td className="px-6 py-3">{item.email}</td>
-              <td className="px-6 py-3">
+              <td className="px-6 py-3 border">{item.email}</td>
+              <td className="px-6 py-3 border">
                 <Placeholderr value={item.role.toLowerCase()} />
               </td>
-              <td className="px-4">
-                <Button onClick={() => handleView(item.id)} text=" View More" />
+              <td className="px-4 border">
+                <Button onClick={() => handleView(item.id)} text="View More" />
               </td>
-              <td className="px-4">
+              <td className="px-4 border">
                 <Button onClick={() => deleteAdmin(item.id)} text="Delete" />
               </td>
             </tr>
@@ -186,151 +232,133 @@ const Adminlist: React.FC<AdminListProps> = () => {
         </tbody>
       </table>
 
-      <Pagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        handlePageChange={handlePageChange}
-        rowsPerPage={rowsPerPage}
-        setRowsPerPage={handleRowsPerPageChange}
-      />
-
       {isViewModalOpen && selectedAdminDetails && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          {isViewModalOpen && selectedAdminDetails && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-              <div className="bg-white p-6 rounded-lg mt-8">
-                <h2 className="text-xl font-bold mb-4">Admin Details</h2>
-                <form onSubmit={handleSubmit(onSubmit)} className="py-2 w-96">
-                  <p className="py-3 ">
-                    <Label value="First Name (EN):" />{" "}
-                    {isEditMode ? (
-                      <input
-                        type="text"
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        {...register("details.firstName.en")}
-                      />
-                    ) : (
-                      <Placeholderr
-                        value={selectedAdminDetails.details.firstName.en}
-                      />
-                    )}
-                  </p>
-                  <p className="py-3">
-                    <Label value="First Name (NE):" />{" "}
-                    {isEditMode ? (
-                      <input
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        type="text"
-                        {...register("details.firstName.ne")}
-                      />
-                    ) : (
-                      <Placeholderr
-                        value={selectedAdminDetails.details.firstName.ne}
-                      />
-                    )}
-                  </p>
-                  <p className="py-3">
-                    <Label value="Last Name (EN):" />{" "}
-                    {isEditMode ? (
-                      <input
-                        type="text"
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        {...register("details.lastName.en")}
-                      />
-                    ) : (
-                      <Placeholderr
-                        value={selectedAdminDetails.details.lastName.en}
-                      />
-                    )}
-                  </p>
-                  <p className="py-3">
-                    <Label value="Last Name (NE):" />{" "}
-                    {isEditMode ? (
-                      <input
-                        type="text"
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        {...register("details.lastName.ne")}
-                      />
-                    ) : (
-                      <Placeholderr
-                        value={selectedAdminDetails.details.lastName.ne}
-                      />
-                    )}
-                  </p>
-                  <p className="py-3">
-                    <Label value="Role:" />{" "}
-                    {isEditMode ? (
-                      <input
-                        type="text"
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        {...register("role")}
-                      />
-                    ) : (
-                      <Placeholderr value={selectedAdminDetails.role} />
-                    )}
-                  </p>
-                  <p className="py-3">
-                    <Label value="Phone Number:" />{" "}
-                    {isEditMode ? (
-                      <input
-                        type="text"
-                        style={{
-                          color: "black",
-                          backgroundColor: "lightgrey",
-                          border: "red",
-                        }}
-                        {...register("details.phoneNumber")}
-                      />
-                    ) : (
-                      <Placeholderr
-                        value={selectedAdminDetails.details.phoneNumber}
-                      />
-                    )}
-                  </p>
+        <div className="fixed inset-0 w-full flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg mt-8">
+            <h2 className="text-md font-bold mb-4 ml-48">Admin Details</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="py-2 w-full">
+              <p className="py-3">
+                <Label value="First Name (EN):" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("details.firstName.en")}
+                  />
+                ) : (
+                  <Placeholderr
+                    value={selectedAdminDetails.details.firstName.en}
+                  />
+                )}
+              </p>
+              <p className="py-3">
+                <Label value="First Name (NE):" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("details.firstName.ne")}
+                  />
+                ) : (
+                  <Placeholderr
+                    value={selectedAdminDetails.details.firstName.ne}
+                  />
+                )}
+              </p>
+              <p className="py-3">
+                <Label value="Last Name (EN):" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("details.lastName.en")}
+                  />
+                ) : (
+                  <Placeholderr
+                    value={selectedAdminDetails.details.lastName.en}
+                  />
+                )}
+              </p>
+              <p className="py-3">
+                <Label value="Last Name (NE):" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("details.lastName.ne")}
+                  />
+                ) : (
+                  <Placeholderr
+                    value={selectedAdminDetails.details.lastName.ne}
+                  />
+                )}
+              </p>
+              <p className="py-3">
+                <Label value="Role:" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("role")}
+                  />
+                ) : (
+                  <Placeholderr value={selectedAdminDetails.role} />
+                )}
+              </p>
+              <p className="py-3">
+                <Label value="Phone Number:" />
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    className="w-full p-2 mt-1 border rounded"
+                    {...register("details.phoneNumber")}
+                  />
+                ) : (
+                  <Placeholderr
+                    value={selectedAdminDetails.details.phoneNumber}
+                  />
+                )}
+              </p>
 
-                  <div className="flex justify-between mt-4">
-                    {isEditMode ? (
-                      <>
-                        <Button
-                          onClick={handleSubmit(onSubmit)}
-                          text="Save Changes"
-                        />
-                        <Button
-                          onClick={() => setIsEditMode(false)}
-                          text="Cancel"
-                        />
-                      </>
-                    ) : (
-                      <Button onClick={() => setIsEditMode(true)} text="Edit" />
-                    )}
-                    <Button onClick={closeModal} text="Close" />
-                  </div>
-                </form>
+              <div className="flex justify-between mt-4">
+                {isEditMode ? (
+                  <>
+                    <Button
+                      onClick={handleSubmit(onSubmit)}
+                      text="Save Changes"
+                    />
+                    <Button
+                      onClick={() => setIsEditMode(false)}
+                      text="Cancel"
+                    />
+                  </>
+                ) : (
+                  <Button onClick={() => setIsEditMode(true)} text="Edit" />
+                )}
+                <Button onClick={closeModal} text="Close" />
               </div>
-            </div>
-          )}
+            </form>
+          </div>
         </div>
       )}
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center mt-8">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-l"
+        >
+          Previous
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };
